@@ -69,6 +69,7 @@ class Game
 
   def update
     state.camera = [player.y - 500, state.camera].max
+    
     player.x += player.vel.x.to_i
     player.y += player.vel.y.to_i
     
@@ -76,6 +77,8 @@ class Game
                      .clamp(-MAX_MOVE_SPEED, MAX_MOVE_SPEED)
     player.vel.y = (player.vel.y - GRAVITY)
                      .clamp(-MAX_FALL_SPEED, BOUNCE_UP_SPEED)
+
+    player.w = (40 + (player.bounce_at.ease 15) * 40).to_i if player.bounce_at
     
     # wraparound
     overlap = (player.w / 2).to_i
@@ -88,6 +91,7 @@ class Game
     # bounce up on collision
     if (player.vel.y < 0) && (geometry.find_intersect_rect player, state.platforms)
       player.vel.y = BOUNCE_UP_SPEED
+      player.bounce_at = state.tick_count
     end
 
     # lose

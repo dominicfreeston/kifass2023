@@ -92,6 +92,10 @@ class Game
     if (player.vel.y < 0) && (geometry.find_intersect_rect player, state.platforms)
       player.vel.y = BOUNCE_UP_SPEED
       player.bounce_at = state.tick_count
+      lr = inputs.left_right
+      if lr != 0 && lr.sign != player.vel.x.sign
+        player.vel.x = lr
+      end
     end
 
     # lose

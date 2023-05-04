@@ -16,10 +16,12 @@ class Game
     state.player
   end
 
-  def setup
-    state.player ||= {
+  def reset_level
+    state.camera = 0
+    
+    state.player = {
       x: grid.center.x,
-      y: grid.h,
+      y: 100,
       w: 80,
       h: 80,
       anchor_x: 0.5,
@@ -29,7 +31,7 @@ class Game
       vel: {x: 0, y: 0,},
     }
     
-    state.platforms ||= [
+    state.platforms = [
       {
         x: 0,
         y: 0,
@@ -51,10 +53,20 @@ class Game
         h: 20,
         anchor_x: 0.5,
         anchor_y: 0.5,
-      }                   ]
+      },
+      {
+        x: 200,
+        y: grid.h,
+        w: 200,
+        h: 20,
+        anchor_x: 0.5,
+        anchor_y: 0.5,
+      },
+    ]
   end
 
   def update
+    state.camera = [player.y - 500, state.camera].max
     player.x += player.vel.x.to_i
     player.y += player.vel.y.to_i
     
@@ -75,17 +87,40 @@ class Game
     if (geometry.find_intersect_rect player, state.platforms)
       player.vel.y = BOUNCE_UP_SPEED
     end
+
+    # death
+    if player.y < state.camera
+      reset_level
+    end
   end
 
   def render
-    outputs.sprites << player
-    outputs.solids << state.platforms
+    outputs.sprites << [player].map do |p|
+      p = p.dup
+      p.y -= state.camera
+      p
+    end
+    outputs.solids << state.platforms.map do |p|
+      p = p.dup
+      p.y -= state.camera
+      p
+    end
   end
   
   def tick
-    setup
+    reset_level if state.tick_count == 0
     update
     render
+
+    # debug overlay
+    args.state.debug_on ||= false
+    if args.inputs.keyboard.key_down.p
+      args.state.debug_on = !args.state.debug_on
+    end
+    if args.state.debug_on
+      args.outputs.debug << args.gtk.framerate_diagnostics_primitives
+    end
+
   end
 end
 

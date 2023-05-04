@@ -31,38 +31,28 @@ class Game
       vel: {x: 0, y: 0,},
     }
     
-    state.platforms = [
+    state.platforms = generate_level
+  end
+
+  def generate_level
+    [
       {
         x: 0,
         y: 0,
         w: grid.w,
-        h: 20,
+        h: 20
       },
-      {
-        x: 100,
-        y: 200,
-        w: 200,
-        h: 20,
-        anchor_x: 0.5,
-        anchor_y: 0.5,
-      },
-      {
-        x: grid.center.x,
-        y: grid.center.y,
-        w: 200,
-        h: 20,
-        anchor_x: 0.5,
-        anchor_y: 0.5,
-      },
-      {
-        x: 200,
-        y: grid.h,
-        w: 200,
-        h: 20,
-        anchor_x: 0.5,
-        anchor_y: 0.5,
-      },
-    ]
+      (0...100).map do |i|
+        {
+          x: (rand grid.w),
+          y: (rand grid.h / 3) + (i * 100),
+          w: 200,
+          h: 20,
+          anchor_x: 0.5,
+          anchor_y: 0.5,
+        }
+      end
+    ].flatten
   end
 
   def update

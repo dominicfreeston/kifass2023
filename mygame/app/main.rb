@@ -74,7 +74,7 @@ class Game
     end
     
     # bounce up on collision
-    if (geometry.find_intersect_rect player, state.platforms)
+    if (player.vel.y < 0) && (geometry.find_intersect_rect player, state.platforms)
       player.vel.y = BOUNCE_UP_SPEED
     end
 

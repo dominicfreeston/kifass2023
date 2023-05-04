@@ -1,5 +1,6 @@
 SPATHS = {
-  player: "sprites/circle/black.png"
+  player: "sprites/circle/black.png",
+  goal: "sprites/hexagon/black.png",
 }
 
 GRAVITY = 0.25
@@ -27,11 +28,22 @@ class Game
       anchor_x: 0.5,
       anchor_y: 0.5,
       path: SPATHS.player,
+      angle: -90,
       
       vel: {x: 0, y: 0,},
     }
     
     state.platforms = generate_level
+
+    state.goal = {
+      x: grid.center.x,
+      y: state.platforms.last.y + 100,
+      w: 80,
+      h: 80,
+      angle: 90,
+      path: SPATHS.goal
+    }
+    
   end
 
   def generate_level
@@ -42,7 +54,7 @@ class Game
         w: grid.w,
         h: 20
       },
-      (0...100).map do |i|
+      (0...50).map do |i|
         {
           x: (rand grid.w),
           y: (rand grid.h / 3) + (i * 100),
@@ -78,14 +90,19 @@ class Game
       player.vel.y = BOUNCE_UP_SPEED
     end
 
-    # death
+    # lose
     if player.y < state.camera
+      reset_level
+    end
+
+    # win
+    if player.intersect_rect? state.goal
       reset_level
     end
   end
 
   def render
-    outputs.sprites << [player].map do |p|
+    outputs.sprites << [player, state.goal].map do |p|
       p = p.dup
       p.y -= state.camera
       p

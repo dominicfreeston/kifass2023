@@ -73,6 +73,9 @@ class Game
     end
     
     state.camera = [player.y - 500, state.camera].max
+    state.platforms.filter! do |p|
+      p.top > state.camera
+    end
     
     player.x += player.vel.x
     player.y += player.vel.y
@@ -98,7 +101,8 @@ class Game
     end
     
     # bounce up on collision
-    if (player.vel.y < 0) && (geometry.find_intersect_rect player, state.platforms)
+    collisions = (geometry.find_all_intersect_rect player, state.platforms) if player.vel.y < 0
+    if collisions&.any? { |c| player.y > c.top}
       player.vel.y = BOUNCE_UP_SPEED
       player.bounce_at = state.tick_count
       if lr != 0 && lr != player.vel.x.sign
@@ -159,3 +163,27 @@ end
 
 $gtk.reset
 
+
+
+## This is probably a bad idea but let's try it for this game!
+class Hash
+  def left
+    self[:left] || (self.x - self.w * (self.anchor_x || 0) if self.is_rect?)
+  end
+
+  def right
+    self[:right] || (self.x + self.w * (1 - (self.anchor_x || 0)) if self.is_rect?)
+  end
+
+  def top
+    self[:top] || (self.y + self.h * (1 - (self.anchor_y || 0)) if self.is_rect?)
+  end
+  
+  def bottom
+    self[:bottom] || (self.y - self.h * (self.anchor_y || 0) if self.is_rect?)
+  end
+
+  def is_rect?
+    %i[x y w h].all? { |s| self.key? s }
+  end
+end

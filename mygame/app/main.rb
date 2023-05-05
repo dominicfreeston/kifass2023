@@ -93,11 +93,10 @@ class Game
     player.w = (40 + (player.bounce_at.ease 15) * 40).to_i if player.bounce_at
     
     # wraparound
-    overlap = (player.w / 2).to_i
-    if player.x < -overlap
-      player.x = grid.w + overlap
-    elsif player.x > grid.w + overlap
-      player.x = -overlap
+    if player.right < 0
+      player.left = grid.w
+    elsif player.left > grid.w
+      player.right = 0
     end
     
     # bounce up on collision
@@ -111,7 +110,7 @@ class Game
     end
 
     # lose
-    if player.y < state.camera
+    if player.top < state.camera
       reset_level
     end
 
@@ -168,22 +167,54 @@ $gtk.reset
 ## This is probably a bad idea but let's try it for this game!
 class Hash
   def left
-    self[:left] || (self.x - self.w * (self.anchor_x || 0) if self.is_rect?)
+    self[:left] || (x - w * (anchor_x || 0) if is_rect?)
   end
 
+  def left= v
+    if is_rect? && !(key? :left)
+      self.x = v + w * (anchor_x || 0)
+    else
+      self[:left] = v
+    end
+  end
+    
   def right
-    self[:right] || (self.x + self.w * (1 - (self.anchor_x || 0)) if self.is_rect?)
+    self[:right] || (x + w * (1 - (anchor_x || 0)) if is_rect?)
+  end
+
+  def right= v
+    if is_rect? && !(key? :right)
+      self.x = v - w * (1 - (anchor_x || 0))
+    else
+      self[:right] = v
+    end
   end
 
   def top
-    self[:top] || (self.y + self.h * (1 - (self.anchor_y || 0)) if self.is_rect?)
+    self[:top] || (y + h * (1 - (anchor_y || 0)) if is_rect?)
+  end
+
+  def top= v
+    if is_rect? && !(key? :top)
+      self.x = v - h * (1 - (anchor_y || 0))
+    else
+      self[:top] = v
+    end
   end
   
   def bottom
-    self[:bottom] || (self.y - self.h * (self.anchor_y || 0) if self.is_rect?)
+    self[:bottom] || (y - h * (anchor_y || 0) if is_rect?)
+  end
+
+  def bottom= v
+    if is_rect? && !(key? :bottom)
+      self.x = v + h * (anchor_y || 0)
+    else
+      self[:bottom] = v
+    end
   end
 
   def is_rect?
-    %i[x y w h].all? { |s| self.key? s }
+    %i[x y w h].all? { |s| key? s }
   end
 end

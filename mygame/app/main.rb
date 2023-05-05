@@ -54,10 +54,10 @@ class Game
         w: grid.w,
         h: 20
       },
-      (0...50).map do |i|
+      (1...50).map do |i|
         {
           x: (rand grid.w),
-          y: (rand grid.h / 3) + (i * 100),
+          y: (i * 100) + rand(50),
           w: 200,
           h: 20,
           anchor_x: 0.5,

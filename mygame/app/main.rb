@@ -68,6 +68,10 @@ class Game
   end
 
   def update
+    if !args.inputs.keyboard.has_focus
+      return
+    end
+    
     state.camera = [player.y - 500, state.camera].max
     
     player.x += player.vel.x

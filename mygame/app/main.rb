@@ -70,10 +70,15 @@ class Game
   def update
     state.camera = [player.y - 500, state.camera].max
     
-    player.x += player.vel.x.to_i
-    player.y += player.vel.y.to_i
+    player.x += player.vel.x
+    player.y += player.vel.y
+
+    lr = inputs.left_right.sign
+    acc = ACCELERATION * lr
+    # slow down faster than you speed up
+    acc += ACCELERATION * lr if lr != player.vel.x.sign
     
-    player.vel.x = (player.vel.x + inputs.left_right * ACCELERATION)
+    player.vel.x = (player.vel.x + acc)
                      .clamp(-MAX_MOVE_SPEED, MAX_MOVE_SPEED)
     player.vel.y = (player.vel.y - GRAVITY)
                      .clamp(-MAX_FALL_SPEED, BOUNCE_UP_SPEED)
@@ -92,9 +97,8 @@ class Game
     if (player.vel.y < 0) && (geometry.find_intersect_rect player, state.platforms)
       player.vel.y = BOUNCE_UP_SPEED
       player.bounce_at = state.tick_count
-      lr = inputs.left_right
-      if lr != 0 && lr.sign != player.vel.x.sign
-        player.vel.x = lr
+      if lr != 0 && lr != player.vel.x.sign
+        player.vel.x = lr * 1.2
       end
     end
 

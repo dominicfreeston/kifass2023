@@ -114,6 +114,9 @@ class Game
   end
 
   def render
+    outputs.background_color = [0, 0, 0]
+    outputs.solids << [0, 0, grid.w, grid.h, 255, 255, 255]
+    
     outputs.sprites << [player, state.goal].map do |p|
       p = p.dup
       p.y -= state.camera

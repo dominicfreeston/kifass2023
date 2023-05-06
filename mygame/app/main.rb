@@ -23,13 +23,11 @@ class Game
     state.player = {
       x: grid.center.x,
       y: 100,
-      w: 80,
-      h: 80,
+      w: 128,
+      h: 128,
       anchor_x: 0.5,
       anchor_y: 0.5,
       path: SPATHS.player,
-      angle: -90,
-      
       vel: {x: 0, y: 0,},
     }
     
@@ -40,7 +38,6 @@ class Game
       y: state.platforms.last.y + 100,
       w: 80,
       h: 80,
-      angle: 90,
       path: SPATHS.goal
     }
     
@@ -90,7 +87,7 @@ class Game
     player.vel.y = (player.vel.y - GRAVITY)
                      .clamp(-MAX_FALL_SPEED, BOUNCE_UP_SPEED)
 
-    player.w = (40 + (player.bounce_at.ease 15) * 40).to_i if player.bounce_at
+    player.squish = (player.bounce_at.ease 15, :flip) if player.bounce_at else 0
     
     # wraparound
     if player.right < 0
@@ -126,6 +123,7 @@ class Game
     
     outputs.sprites << [player, state.goal].map do |p|
       p = p.dup
+      p.h -= p.h.third * (p.squish || 0)
       p.y -= state.camera
       p
     end
@@ -218,3 +216,4 @@ class Hash
     %i[x y w h].all? { |s| key? s }
   end
 end
+

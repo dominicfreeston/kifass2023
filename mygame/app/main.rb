@@ -10,6 +10,68 @@ BOUNCE_UP_SPEED = 12
 ACCELERATION = 0.1
 MAX_MOVE_SPEED = 12
 
+class IntroScene
+  attr_gtk
+
+  def tick
+    title = "Tumbleweed goes to space"
+    subtitle = "things could get hairy"
+    instruction = "press any key to begin"
+    
+    state.instruction_letters ||=
+    instruction.chars.map.with_index(-instruction.length.half) do |l, i|
+      {
+        text: l,
+        x: grid.center.x + i * 16,
+        y: grid.center.y - 120 + i,
+        size_px: 32,
+        alignment_enum: 0,
+        vertical_alignment_enum: 1,
+        vel: {x: 0, y: 0,},
+      }  
+    end
+
+    state.instruction_letters.each do |l| 
+      l.vel.y = (l.vel.y - GRAVITY)
+                  .clamp(-MAX_FALL_SPEED, BOUNCE_UP_SPEED)
+      l.y += l.vel.y
+
+      platform = grid.center.y - 130
+      if l.y < platform
+        l.y = platform
+        l.vel.y = 4
+      end
+    end
+    
+    outputs.labels << [
+      {
+        text: title,
+        x: grid.center.x,
+        y: grid.center.y + 200,
+        size_px: 64,
+        alignment_enum: 1,
+        vertical_alignment_enum: 1,
+      },
+      {
+        text: subtitle,
+        x: grid.center.x,
+        y: grid.center.y + 120,
+        size_px: 32,
+        alignment_enum: 1,
+        vertical_alignment_enum: 1,
+      }]
+
+    outputs.labels << state.instruction_letters
+
+    any_key_pressed ? Game.new : self
+  end
+
+  def any_key_pressed
+    (inputs.keyboard.key_down.truthy_keys.length || 0) > 0
+  end
+  
+end
+
 class Game
   attr_gtk
 
@@ -40,7 +102,8 @@ class Game
       h: 80,
       path: SPATHS.goal
     }
-    
+
+    @setup = true
   end
 
   def generate_level
@@ -65,7 +128,7 @@ class Game
   end
 
   def update
-    if !args.inputs.keyboard.has_focus
+    if !inputs.keyboard.has_focus
       return
     end
     
@@ -117,10 +180,7 @@ class Game
     end
   end
 
-  def render
-    outputs.background_color = [0, 0, 0]
-    outputs.solids << [0, 0, grid.w, grid.h, 255, 255, 255]
-    
+  def render    
     outputs.sprites << [player, state.goal].map do |p|
       p = p.dup
       p.h -= p.h.third * (p.squish || 0)
@@ -135,31 +195,34 @@ class Game
   end
   
   def tick
-    reset_level if state.tick_count == 0
+    reset_level if !@setup
     update
     render
 
     # debug overlay
-    args.state.debug_on ||= false
-    if args.inputs.keyboard.key_down.p
-      args.state.debug_on = !args.state.debug_on
+    state.debug_on ||= false
+    if inputs.keyboard.key_down.p
+      state.debug_on = !state.debug_on
     end
-    if args.state.debug_on
-      args.outputs.debug << args.gtk.framerate_diagnostics_primitives
+    if state.debug_on
+      outputs.debug << gtk.framerate_diagnostics_primitives
     end
 
+    self
   end
 end
 
-$game ||= Game.new
-
 def tick args
-  $game.args = args
-  $game.tick
+  args.outputs.background_color = [0, 0, 0]
+  args.outputs.solids << [0, 0, args.grid.w, args.grid.h, 255, 255, 255]
+
+  $scene.args = args
+  $scene = $scene.tick
 end
 
-$gtk.reset
 
+$scene = IntroScene.new
+$gtk.reset
 
 
 ## This is probably a bad idea but let's try it for this game!

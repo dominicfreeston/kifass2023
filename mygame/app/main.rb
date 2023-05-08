@@ -103,6 +103,11 @@ class Game
       path: SPATHS.goal
     }
 
+    audio[:theme] = {
+      input: "music/tumbleweed.ogg",
+      looping: true,
+    }
+    
     @setup = true
   end
 

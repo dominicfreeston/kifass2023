@@ -1,3 +1,29 @@
+* 4.12
+** [Bugfix] Fixed Raspberry Pi and Web Builds.
+   Tweetcart updates had an unintended side effect and broke Raspberry Pi and Web. Regression suites
+   have been put into place to make sure this doesn't happen again. We are unsure of why only those platforms
+   failed, but think it's a bug in mRuby's byte-code compilation (further research needed).
+
+   The Tweetcart source has been mostly reverted except for the addition of the ~pixels!~ and ~color~
+   method. We will work with OSS contributers to flesh out a fuller api (and get closer to finding the
+   mRuby bug).
+* 4.11
+** [Support] $args.pixel_arrays unlocked for all license tiers!
+   All license tiers can now use both sound synthesis and pixel arrays, woo hoo!
+** [OSS] Tweetcart apis enhanced given that everyone can now use pixel arrays.
+   Source code for tweetcart.rb is available locally at =./docs/oss.txt= and
+   online at https://github.com/DragonRuby/dragonruby-game-toolkit-contrib/blob/main/dragon/tweetcart.rb.
+
+   You can download the GitHub version by invoking the following function in the DragonRuby Console:
+
+   $gtk.download_stb_rb "dragonruby", "dragonruby-game-toolkit-contrib", "tweetcart.rb"
+
+** [Support] A "Close Console" button is available in a production build.
+   It's helpful to have this button if you're running the game on a touch device w/o a keyboard.
+** [Bugfix] render_targets will no longer be randomly lost on Windows+DirectX when the game window is resized.
+   No really. This time we definitely maybe have this resolved.
+** [Performance] Performance improvements to web builds.
+   Invocation of ~tick~ should happen more frequently bringing web games closer to 60fps.
 * 4.10
 ** [Samples] Added sample app that shows how to orchestrate a sequence of animations (eg cutscenes).
    Sample app location: =./samples/08_tweening_lerping_easing_functions/08_cutscenes=

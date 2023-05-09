@@ -94,7 +94,8 @@ class Game
     }
     
     state.platforms = generate_level
-    
+    state.broken_platforms = []
+
     state.goal = {
       x: grid.center.x,
       y: state.platforms.last.y + 100,
@@ -173,8 +174,11 @@ class Game
       if lr != 0 && lr != player.vel.x.sign
         player.vel.x = lr * 1.2
       end
-      
-      state.platforms.delete plat if plat.breakable
+
+      if plat.breakable
+        state.platforms.delete plat
+        state.broken_platforms << plat
+      end
     end
 
     # lose
@@ -186,13 +190,27 @@ class Game
     if player.intersect_rect? state.goal
       reset_level
     end
+
+    # One shots
+
+    state.broken_platforms.each do |p|
+      p.y -= 8
+      if p.y < state.camera
+        state.broken_platforms.delete p
+      end
+    end
   end
 
-  def render    
+  def render
     outputs.primitives << state.platforms.map do |p|
       p = p.dup
       p.y -= state.camera
       p.breakable ? p.border : p.solid
+    end
+    outputs.primitives << state.broken_platforms.map do |p|
+      p = p.dup
+      p.y -= state.camera
+      p.border
     end
     outputs.primitives << [player, state.goal].map do |p|
       p = p.dup

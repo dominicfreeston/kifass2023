@@ -16,19 +16,34 @@ CONTROL_SETTINGS = {
   }
 }
 
+INTRO_TEXTS = {
+  title: "Tumbleweed goes to space",
+  subtitle: "things could get hairy",
+  instruction: "press SPACE to begin",
+}
+
+WIN_TEXTS = {
+  title: "YOU MADE IT!",
+  subtitle: "Tumbleweed went to space and got the thing",
+  instruction: "press SPACE to start again",
+}
+
 ACCELERATION = 0.1
 MAX_MOVE_SPEED = 12
 
 class IntroScene
   attr_gtk
 
-  def tick
-    title = "Tumbleweed goes to space"
-    subtitle = "things could get hairy"
-    instruction = "press any key to begin"
+  def initialize texts
+    @args = args
+    @texts = texts
+  end
+
+  def setup
+    t = @texts.instruction
     
-    state.instruction_letters ||=
-    instruction.chars.map.with_index(-instruction.length.half) do |l, i|
+    state.instruction_letters =
+      t.chars.map.with_index(-t.length.half) do |l, i|
       {
         text: l,
         x: grid.center.x + i * 16,
@@ -39,7 +54,12 @@ class IntroScene
         vel: {x: 0, y: 0,},
       }  
     end
-
+    
+    @setup = true
+  end
+  
+  def tick
+    setup if not @setup
     state.instruction_letters.each do |l| 
       l.vel.y = (l.vel.y - 0.25)
                   .clamp(-12, 12)
@@ -54,7 +74,7 @@ class IntroScene
     
     outputs.labels << [
       {
-        text: title,
+        text: @texts.title,
         x: grid.center.x,
         y: grid.center.y + 200,
         size_px: 64,
@@ -62,7 +82,7 @@ class IntroScene
         vertical_alignment_enum: 1,
       },
       {
-        text: subtitle,
+        text: @texts.subtitle,
         x: grid.center.x,
         y: grid.center.y + 120,
         size_px: 32,
@@ -72,11 +92,11 @@ class IntroScene
 
     outputs.labels << state.instruction_letters
 
-    any_key_pressed ? Game.new : self
+    start_game_pressed ? Game.new : self
   end
 
-  def any_key_pressed
-    (inputs.keyboard.key_down.truthy_keys.length || 0) > 0
+  def start_game_pressed
+    inputs.keyboard.key_down.space
   end
   
 end
@@ -215,7 +235,7 @@ class Game
 
     # win
     if player.intersect_rect? state.goal
-      reset_level
+      @next_scene = IntroScene.new WIN_TEXTS
     end
 
     # One shots
@@ -268,7 +288,7 @@ class Game
       outputs.debug << gtk.framerate_diagnostics_primitives
     end
 
-    self
+    @next_scene || self
   end
 end
 
@@ -281,7 +301,7 @@ def tick args
 end
 
 
-$scene = IntroScene.new
+$scene = IntroScene.new INTRO_TEXTS
 $gtk.reset
 
 

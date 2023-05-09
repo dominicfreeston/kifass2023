@@ -94,7 +94,7 @@ class Game
     }
     
     state.platforms = generate_level
-
+    
     state.goal = {
       x: grid.center.x,
       y: state.platforms.last.y + 100,
@@ -127,6 +127,7 @@ class Game
           h: 20,
           anchor_x: 0.5,
           anchor_y: 0.5,
+          breakable: rand > 0.7,
         }
       end
     ].flatten
@@ -166,12 +167,14 @@ class Game
     
     # bounce up on collision
     collisions = (geometry.find_all_intersect_rect player, state.platforms) if player.vel.y < 0
-    if collisions&.any? { |c| player.y > c.top}
+    if plat = collisions&.find { |c| player.y > c.top}
       player.vel.y = BOUNCE_UP_SPEED
       player.bounce_at = state.tick_count
       if lr != 0 && lr != player.vel.x.sign
         player.vel.x = lr * 1.2
       end
+      
+      state.platforms.delete plat if plat.breakable
     end
 
     # lose
@@ -186,16 +189,16 @@ class Game
   end
 
   def render    
-    outputs.sprites << [player, state.goal].map do |p|
+    outputs.primitives << state.platforms.map do |p|
+      p = p.dup
+      p.y -= state.camera
+      p.breakable ? p.border : p.solid
+    end
+    outputs.primitives << [player, state.goal].map do |p|
       p = p.dup
       p.h -= p.h.third * (p.squish || 0)
       p.y -= state.camera
-      p
-    end
-    outputs.solids << state.platforms.map do |p|
-      p = p.dup
-      p.y -= state.camera
-      p
+      p.sprite
     end
   end
   

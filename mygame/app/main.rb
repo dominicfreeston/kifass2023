@@ -136,7 +136,7 @@ class Game
       path: SPATHS.goal
     }
 
-    audio[:theme] = {
+    audio[:theme] ||= {
       input: "music/tumbleweed.ogg",
       looping: true,
     }

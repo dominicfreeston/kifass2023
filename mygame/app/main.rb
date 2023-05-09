@@ -3,9 +3,18 @@ SPATHS = {
   goal: "sprites/hexagon/black.png",
 }
 
-GRAVITY = 0.25
-MAX_FALL_SPEED = 12
-BOUNCE_UP_SPEED = 12
+CONTROL_SETTINGS = {
+  heavy: {
+    gravity: 0.25,
+    max_fall_speed: 12,
+    bounce_up_speed: 12,
+  },
+  fast: {
+    gravity: 1,
+    max_fall_speed: 16,
+    bounce_up_speed: 24,
+  }
+}
 
 ACCELERATION = 0.1
 MAX_MOVE_SPEED = 12
@@ -32,8 +41,8 @@ class IntroScene
     end
 
     state.instruction_letters.each do |l| 
-      l.vel.y = (l.vel.y - GRAVITY)
-                  .clamp(-MAX_FALL_SPEED, BOUNCE_UP_SPEED)
+      l.vel.y = (l.vel.y - 0.25)
+                  .clamp(-12, 12)
       l.y += l.vel.y
 
       platform = grid.center.y - 130
@@ -80,6 +89,9 @@ class Game
   end
 
   def reset_level
+    state.controls ||= [:heavy, :fast].cycle
+    state.selected_controls ||= state.controls.next
+    
     state.camera = 0
     
     state.player = {
@@ -138,24 +150,36 @@ class Game
     if !inputs.keyboard.has_focus
       return
     end
+
+    if inputs.keyboard.key_down.c
+      state.selected_controls = state.controls.next
+    end
+
+    controls_settings = CONTROL_SETTINGS[state.selected_controls]
     
     state.camera = [player.y - 500, state.camera].max
     state.platforms.filter! do |p|
       p.top > state.camera
     end
     
-    player.x += player.vel.x
+    lr = inputs.left_right.sign
+
+    if state.selected_controls == :heavy
+      player.x += player.vel.x      
+    else
+      player.x += lr * 10
+    end
+    
     player.y += player.vel.y
 
-    lr = inputs.left_right.sign
     acc = ACCELERATION * lr
     # slow down faster than you speed up
     acc += ACCELERATION * lr if lr != player.vel.x.sign
     
     player.vel.x = (player.vel.x + acc)
                      .clamp(-MAX_MOVE_SPEED, MAX_MOVE_SPEED)
-    player.vel.y = (player.vel.y - GRAVITY)
-                     .clamp(-MAX_FALL_SPEED, BOUNCE_UP_SPEED)
+    player.vel.y = (player.vel.y - controls_settings.gravity)
+                     .clamp(-controls_settings.max_fall_speed, controls_settings.bounce_up_speed)
 
     player.squish = (player.bounce_at.ease 15, :flip) if player.bounce_at else 0
     
@@ -169,8 +193,11 @@ class Game
     # bounce up on collision
     collisions = (geometry.find_all_intersect_rect player, state.platforms) if player.vel.y < 0
     if plat = collisions&.find { |c| player.y > c.top}
-      player.vel.y = BOUNCE_UP_SPEED
+
+      player.bottom = plat.top
+      player.vel.y = controls_settings.bounce_up_speed
       player.bounce_at = state.tick_count
+      
       if lr != 0 && lr != player.vel.x.sign
         player.vel.x = lr * 1.2
       end
@@ -218,6 +245,13 @@ class Game
       p.y -= state.camera
       p.sprite
     end
+    outputs.labels << {
+      x: grid.w - 5,
+      y: grid.h - 5,
+      text: state.selected_controls,
+      alignment_enum: 2,
+      vertical_alignment_enum: 2,
+    }
   end
   
   def tick
@@ -295,7 +329,7 @@ class Hash
 
   def bottom= v
     if is_rect? && !(key? :bottom)
-      self.x = v + h * (anchor_y || 0)
+      self.y = v + h * (anchor_y || 0)
     else
       self[:bottom] = v
     end

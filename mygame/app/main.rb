@@ -5,9 +5,9 @@ SPATHS = {
 
 CONTROL_SETTINGS = {
   heavy: {
-    gravity: 0.25,
+    gravity: 0.5,
     max_fall_speed: 12,
-    bounce_up_speed: 12,
+    bounce_up_speed: 16,
   },
   fast: {
     gravity: 1,
@@ -28,7 +28,7 @@ WIN_TEXTS = {
   instruction: "press SPACE to start again",
 }
 
-ACCELERATION = 0.1
+ACCELERATION = 0.2
 MAX_MOVE_SPEED = 12
 
 class IntroScene
@@ -262,7 +262,7 @@ class Game
     end
     outputs.primitives << [player, state.goal].map do |p|
       p = p.dup
-      p.h -= p.h.third * (p.squish || 0)
+      p.h -= p.h.half * (p.squish || 0)
       p.y -= state.camera
       p.sprite
     end

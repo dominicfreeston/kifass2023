@@ -109,6 +109,7 @@ class Game
   end
 
   def reset_level
+    state.game_paused ||= false
     state.controls ||= [:heavy, :fast].cycle
     state.selected_controls ||= state.controls.next
     
@@ -137,7 +138,7 @@ class Game
     }
 
     audio[:theme] ||= {
-      input: "music/tumbleweed.ogg",
+      input: "sound/tumbleweed.ogg",
       looping: true,
     }
     
@@ -167,9 +168,10 @@ class Game
   end
 
   def update
-    if !inputs.keyboard.has_focus
-      return
-    end
+    state.game_paused = !state.game_paused if inputs.keyboard.key_down.escape
+    paused = !inputs.keyboard.has_focus || state.game_paused
+    audio[:theme].paused = paused
+    return if paused
 
     if inputs.keyboard.key_down.c
       state.selected_controls = state.controls.next
@@ -227,6 +229,10 @@ class Game
         state.platforms.delete plat
         state.broken_platforms << plat
       end
+
+      audio[:jump] ||= {
+        input: "sound/jump.wav"
+      }
     end
 
     # lose
@@ -289,6 +295,8 @@ class Game
       outputs.debug << gtk.framerate_diagnostics_primitives
     end
 
+    
+    audio[:theme] = nil if @next_scene
     @next_scene || self
   end
 end

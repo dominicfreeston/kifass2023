@@ -189,7 +189,9 @@ class Game
     else
       player.x += lr * 10
     end
-    
+
+    # Find platforms that are below player before movement is applied
+    below_platforms = state.platforms.select { |c| player.bottom >= c.top}
     player.y += player.vel.y
 
     acc = ACCELERATION * lr
@@ -211,9 +213,8 @@ class Game
     end
     
     # bounce up on collision
-    collisions = (geometry.find_all_intersect_rect player, state.platforms) if player.vel.y < 0
-    if plat = collisions&.find { |c| player.y > c.top}
-
+    plat = (geometry.find_intersect_rect player, below_platforms) if player.vel.y < 0
+    if plat
       player.bottom = plat.top
       player.vel.y = controls_settings.bounce_up_speed
       player.bounce_at = state.tick_count

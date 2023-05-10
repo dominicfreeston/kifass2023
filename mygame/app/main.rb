@@ -229,7 +229,9 @@ class Game
         state.platforms.delete plat
         state.broken_platforms << plat
         audio[:break] ||= {
-          input: "sound/break.wav"
+          input: "sound/break.wav",
+          gain: 0.5,
+          pitch: 0.9 + (rand 0.2),
         }
       end
 

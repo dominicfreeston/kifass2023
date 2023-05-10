@@ -169,9 +169,9 @@ class Game
 
   def update
     state.game_paused = !state.game_paused if inputs.keyboard.key_down.escape
-    paused = !inputs.keyboard.has_focus || state.game_paused
-    audio[:theme].paused = paused
-    return if paused
+    state.game_paused = true if !inputs.keyboard.has_focus
+    audio[:theme].paused = state.game_paused
+    return if state.game_paused
 
     if inputs.keyboard.key_down.c
       state.selected_controls = state.controls.next
@@ -288,6 +288,19 @@ class Game
       alignment_enum: 2,
       vertical_alignment_enum: 2,
     }
+
+    if state.game_paused
+      outputs.primitives << [1, 2].map do |n|
+        {
+          x: n * 20,
+          y: grid.h - 20,
+          w: 10,
+          h: 40,
+          anchor_x: 0,
+          anchor_y: 1,
+        }.solid
+      end
+    end
   end
   
   def tick

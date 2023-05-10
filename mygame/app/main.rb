@@ -121,7 +121,7 @@ class Game
       w: 128,
       h: 128,
       anchor_x: 0.5,
-      anchor_y: 0.5,
+      anchor_y: 0,
       path: SPATHS.player,
       vel: {x: 0, y: 0,},
     }

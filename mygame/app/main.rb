@@ -228,6 +228,9 @@ class Game
       if plat.breakable
         state.platforms.delete plat
         state.broken_platforms << plat
+        audio[:break] ||= {
+          input: "sound/break.wav"
+        }
       end
 
       audio[:jump] ||= {
@@ -237,11 +240,17 @@ class Game
 
     # lose
     if player.top < state.camera
+      audio[:lose] = {
+        input: "sound/lose.wav"
+      }
       reset_level
     end
 
     # win
     if player.intersect_rect? state.goal
+      audio[:win] = {
+        input: "sound/win.wav"
+      }
       @next_scene = IntroScene.new WIN_TEXTS
     end
 

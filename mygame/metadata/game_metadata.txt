@@ -3,4 +3,4 @@ devtitle=Dominic and Ellis
 gameid=kifass-2023
 gametitle=KIFASS 2023
 version=0.5
-icon=sprites/circle/black.png
+icon=sprites/cat.png

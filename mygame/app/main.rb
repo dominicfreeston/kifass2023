@@ -1,5 +1,9 @@
 SPATHS = {
-  player: "sprites/circle/black.png",
+  player: {
+    flat: "sprites/cat.png",
+    up: "sprites/cat-up.png",
+    down: "sprites/cat-down.png",
+  },
   goal: "sprites/hexagon/black.png",
 }
 
@@ -122,7 +126,6 @@ class Game
       h: 128,
       anchor_x: 0.5,
       anchor_y: 0,
-      path: SPATHS.player,
       vel: {x: 0, y: 0,},
     }
     
@@ -205,7 +208,7 @@ class Game
     player.vel.y = (player.vel.y - controls_settings.gravity)
                      .clamp(-controls_settings.max_fall_speed, controls_settings.bounce_up_speed)
 
-    player.squish = (player.bounce_at.ease 15, :flip) if player.bounce_at else 0
+    # player.squish = (player.bounce_at.ease 15, :flip) if player.bounce_at else 0
     
     # wraparound
     if player.right < 0
@@ -277,12 +280,29 @@ class Game
       p.y -= state.camera
       p.border
     end
-    outputs.primitives << [player, state.goal].map do |p|
+    
+    outputs.primitives << [state.goal].map do |p|
       p = p.dup
       p.h -= p.h.half * (p.squish || 0)
       p.y -= state.camera
       p.sprite
     end
+
+    outputs.primitives << [player].map do |p|
+      p = p.dup
+      p.y -= state.camera
+      delta = 2
+      if p.vel.y > delta
+        p.path = SPATHS.player.up
+      elsif p.vel.y < -delta
+        p.path = SPATHS.player.down
+      else
+        p.path = SPATHS.player.flat
+      end
+      p.flip_horizontally = p.vel.x < 0
+      p.sprite
+    end
+    
     outputs.labels << {
       x: grid.w - 5,
       y: grid.h - 5,

@@ -357,59 +357,41 @@ end
 $scene = IntroScene.new INTRO_TEXTS
 $gtk.reset
 
-
 ## This is probably a bad idea but let's try it for this game!
-class Hash
+module AttrRectExtended
   def left
-    self[:left] || (x - w * (anchor_x || 0) if is_rect?)
+    x - w * (anchor_x || 0)
   end
-
-  def left= v
-    if is_rect? && !(key? :left)
-      self.x = v + w * (anchor_x || 0)
-    else
-      self[:left] = v
-    end
-  end
-    
+  
   def right
-    self[:right] || (x + w * (1 - (anchor_x || 0)) if is_rect?)
-  end
-
-  def right= v
-    if is_rect? && !(key? :right)
-      self.x = v - w * (1 - (anchor_x || 0))
-    else
-      self[:right] = v
-    end
-  end
-
-  def top
-    self[:top] || (y + h * (1 - (anchor_y || 0)) if is_rect?)
-  end
-
-  def top= v
-    if is_rect? && !(key? :top)
-      self.x = v - h * (1 - (anchor_y || 0))
-    else
-      self[:top] = v
-    end
+    x + w * (1 - (anchor_x || 0))
   end
   
   def bottom
-    self[:bottom] || (y - h * (anchor_y || 0) if is_rect?)
+    y - h * (anchor_y || 0)
+  end
+
+  def top
+    y + h * (1 - (anchor_y || 0))
+  end
+
+  def left= v
+    self.x = v + w * (anchor_x || 0)
+  end
+  
+  def right= v
+    self.x = v - w * (1 - (anchor_x || 0))
   end
 
   def bottom= v
-    if is_rect? && !(key? :bottom)
-      self.y = v + h * (anchor_y || 0)
-    else
-      self[:bottom] = v
-    end
+    self.y = v + h * (anchor_y || 0)
   end
 
-  def is_rect?
-    %i[x y w h].all? { |s| key? s }
+  def top= v
+    self.y = v - h * (1 - (anchor_y || 0))
   end
 end
 
+class Hash
+  prepend AttrRectExtended
+end

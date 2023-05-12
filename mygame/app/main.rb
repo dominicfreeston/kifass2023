@@ -165,9 +165,18 @@ class Game
           anchor_x: 0.5,
           anchor_y: 0.5,
           breakable: rand > 0.7,
+          vel: { x: [0, 0, 0, 0, -1, 1].sample * (rand 4).to_i },
         }
       end
     ].flatten
+  end
+
+  def wraparound! entity
+    if entity.right < 0
+      entity.left = grid.w
+    elsif entity.left > grid.w
+      entity.right = 0
+    end
   end
 
   def update
@@ -186,6 +195,9 @@ class Game
     state.platforms.filter! do |p|
       p.top > state.camera
     end
+    visible_platforms = state.platforms.filter do |p|
+      p.bottom < state.camera + grid.h
+    end
     
     lr = inputs.left_right.sign
 
@@ -196,7 +208,14 @@ class Game
     end
 
     # Find platforms that are below player before movement is applied
-    below_platforms = state.platforms.select { |c| player.bottom >= c.top}
+    visible_platforms.each do |p|
+      if dx = p.vel&.x
+        p.x += dx
+        wraparound! p 
+      end
+    end
+    
+    below_platforms = visible_platforms.select { |c| player.bottom >= c.top}
     player.y += player.vel.y
 
     acc = ACCELERATION * lr
@@ -211,11 +230,7 @@ class Game
     # player.squish = (player.bounce_at.ease 15, :flip) if player.bounce_at else 0
     
     # wraparound
-    if player.right < 0
-      player.left = grid.w
-    elsif player.left > grid.w
-      player.right = 0
-    end
+    wraparound! player
     
     # bounce up on collision
     plat = (geometry.find_intersect_rect player, below_platforms) if player.vel.y < 0

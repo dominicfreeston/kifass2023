@@ -4,6 +4,7 @@ SPATHS = {
     up: "sprites/cat-up.png",
     down: "sprites/cat-down.png",
   },
+  bird: "sprites/bird.png",
   goal: "sprites/hexagon/black.png",
 }
 
@@ -157,6 +158,9 @@ class Game
         h: 20
       },
       (1...50).map do |i|
+        breakable = rand > 0.7
+        vel = [0, 0, 0, 0, -1, 1].sample * (rand 4).to_i
+        path = SPATHS.bird if (breakable && (vel != 0))
         {
           x: (rand grid.w),
           y: (i * 100) + rand(50),
@@ -164,8 +168,10 @@ class Game
           h: 20,
           anchor_x: 0.5,
           anchor_y: 0.5,
-          breakable: rand > 0.7,
-          vel: { x: [0, 0, 0, 0, -1, 1].sample * (rand 4).to_i },
+          path: path,
+          flip_horizontally: vel > 0,
+          breakable: breakable,
+          vel: { x: vel },
         }
       end
     ].flatten
@@ -277,23 +283,36 @@ class Game
     # One shots
 
     state.broken_platforms.each do |p|
+      p.x += p.vel.x
       p.y -= 8
-      if p.y < state.camera
+      if p.top < state.camera - 100 
         state.broken_platforms.delete p
       end
     end
   end
 
+  def sprite_for_platform p
+    p = p.dup
+    p.y -= state.camera
+    
+    if p.path
+      p.h = p.w
+      p.sprite
+    elsif p.breakable
+      p.border
+    else
+      p.solid
+    end
+  end
+  
   def render
     outputs.primitives << state.platforms.map do |p|
-      p = p.dup
-      p.y -= state.camera
-      p.breakable ? p.border : p.solid
+      sprite_for_platform p
     end
     outputs.primitives << state.broken_platforms.map do |p|
-      p = p.dup
-      p.y -= state.camera
-      p.border
+      p = sprite_for_platform p
+      p.angle = 45 * (p.flip_horizontally ? -1 : 1)
+      p
     end
     
     outputs.primitives << [state.goal].map do |p|

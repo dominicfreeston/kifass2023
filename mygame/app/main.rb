@@ -121,8 +121,8 @@ class Game
     state.camera = 0
     
     state.player = {
-      x: grid.center.x,
-      y: 100,
+      x: 100,
+      y: 20 ,
       w: 128,
       h: 128,
       anchor_x: 0.5,
@@ -151,19 +151,32 @@ class Game
 
   def generate_level
     [
+      # floor
       {
         x: 0,
         y: 0,
         w: grid.w,
         h: 20
       },
+      # starting tree branches
+      (1...12).map do |i|
+        {
+          x: grid.center.x,
+          y: (i * 100) + rand(30),
+          w: (rand 200) + 100,
+          h: 20,
+          anchor_x: i % 2,
+          anchor_y: 0.5,
+        }
+      end,
+      # rest of level
       (1...50).map do |i|
         breakable = rand > 0.7
         vel = [0, 0, 0, 0, -1, 1].sample * (rand 4).to_i
         path = SPATHS.bird if (breakable && (vel != 0))
         {
           x: (rand grid.w),
-          y: (i * 100) + rand(50),
+          y: 1000 + (i * 100) + rand(50),
           w: 200,
           h: 20,
           anchor_x: 0.5,
@@ -173,7 +186,7 @@ class Game
           breakable: breakable,
           vel: { x: vel },
         }
-      end
+      end,
     ].flatten
   end
 
@@ -306,6 +319,17 @@ class Game
   end
   
   def render
+    # tree-trunk
+    outputs.primitives << {
+      x: grid.center.x,
+      y: -state.camera,
+      w: 50,
+      h: 1200,
+      anchor_x: 0.5,
+      anchor_y: 0,
+    }.solid
+    
+    # platforms
     outputs.primitives << state.platforms.map do |p|
       sprite_for_platform p
     end

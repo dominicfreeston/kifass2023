@@ -130,8 +130,9 @@ class Game
       vel: {x: 0, y: 0,},
     }
     
-    state.platforms = generate_level
+    state.platforms = generate_platforms
     state.broken_platforms = []
+    state.power_ups = (generate_power_ups state.platforms)
 
     state.goal = {
       x: grid.center.x,
@@ -149,7 +150,7 @@ class Game
     @setup = true
   end
 
-  def generate_level
+  def generate_platforms
     [
       # floor
       {
@@ -188,6 +189,21 @@ class Game
         }
       end,
     ].flatten
+  end
+
+  def generate_power_ups platforms
+    platforms.filter do |p|
+      (!p.breakable) && (p.vel&.x == 0) && (rand > 0.8)
+    end.map do |p|
+      {
+        x: p.x,
+        y: p.top,
+        w: 30,
+        h: 10,
+        anchor_x: 0.5,
+        anchor_y: 0,
+      }
+    end
   end
 
   def wraparound! entity
@@ -244,7 +260,7 @@ class Game
     player.vel.x = (player.vel.x + acc)
                      .clamp(-MAX_MOVE_SPEED, MAX_MOVE_SPEED)
     player.vel.y = (player.vel.y - controls_settings.gravity)
-                     .clamp(-controls_settings.max_fall_speed, controls_settings.bounce_up_speed)
+                     .clamp(-controls_settings.max_fall_speed, controls_settings.bounce_up_speed * 4)
 
     # player.squish = (player.bounce_at.ease 15, :flip) if player.bounce_at else 0
     
@@ -256,6 +272,10 @@ class Game
     if plat
       player.bottom = plat.top
       player.vel.y = controls_settings.bounce_up_speed
+
+      if geometry.find_intersect_rect player, state.power_ups
+        player.vel.y += controls_settings.bounce_up_speed
+      end
       player.bounce_at = state.tick_count
       
       if lr != 0 && lr != player.vel.x.sign
@@ -337,6 +357,12 @@ class Game
       p = sprite_for_platform p
       p.angle = 45 * (p.flip_horizontally ? -1 : 1)
       p
+    end
+
+    outputs.primitives << state.power_ups.map do |p|
+      p = p.dup
+      p.y -= state.camera
+      p.solid
     end
     
     outputs.primitives << [state.goal].map do |p|

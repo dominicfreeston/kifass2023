@@ -275,6 +275,9 @@ class Game
 
       if geometry.find_intersect_rect player, state.power_ups
         player.vel.y += controls_settings.bounce_up_speed
+        audio[:powerup] ||= {
+          input: "sound/powerup.wav"
+        }
       end
       player.bounce_at = state.tick_count
       
@@ -308,7 +311,7 @@ class Game
     # win
     if player.intersect_rect? state.goal
       audio[:win] = {
-        input: "sound/win.wav"
+        input: "sound/fanfare.ogg"
       }
       @next_scene = IntroScene.new WIN_TEXTS
     end

@@ -4,8 +4,29 @@ SPATHS = {
     up: "sprites/cat-up.png",
     down: "sprites/cat-down.png",
   },
-  bird: "sprites/bird.png",
-  goal: "sprites/hexagon/black.png",
+  sky: "sprites/sky.png",
+  tree: "sprites/tree.png",
+  grass: "sprites/grass.png",
+  branch1: "sprites/branch1.png",
+  branch2: "sprites/branch2.png",
+  bird: ["sprites/bird.png",
+         "sprites/bird2.png"],
+  cloud: [{path: "sprites/cloud1.png",
+           w: 360,},
+          {path: "sprites/cloud2.png",
+           w: 460,},
+          {path: "sprites/cloud3.png",
+           w: 450,}],
+  raincloud: [{path: "sprites/raincloud1.png",
+               w: 450,},
+              {path: "sprites/raincloud2.png",
+               w: 460,},
+              {path: "sprites/raincloud3.png",
+               w: 360,}],
+  balloon: ["sprites/balloon1.png",
+            "sprites/balloon2.png",
+            "sprites/balloon3.png",],
+  goal: "sprites/yarn_ball.png",
 }
 
 CONTROL_SETTINGS = {
@@ -132,7 +153,7 @@ class Game
     
     state.platforms = generate_platforms
     state.broken_platforms = []
-    state.power_ups = (generate_power_ups state.platforms)
+    state.power_ups = []    # (generate_power_ups state.platforms)
 
     state.goal = {
       x: grid.center.x,
@@ -160,41 +181,75 @@ class Game
         h: 20
       },
       # starting tree branches
-      (1...12).map do |i|
+      (2...10).map do |i|
+        v = true        
         {
           x: grid.center.x,
           y: (i * 100) + rand(30),
-          w: (rand 200) + 100,
+          w: v ? 370 : 220,
           h: 20,
           anchor_x: i % 2,
           anchor_y: 0.5,
+          path: v ? SPATHS.branch1 : SPATHS.branch2,
+          flip_horizontally: i % 2 != 0,
+          full_sprite: false,
         }
       end,
       # rest of level
       (1...50).map do |i|
         breakable = rand > 0.7
         vel = [0, 0, 0, 0, -1, 1].sample * (rand 4).to_i
-        path = SPATHS.bird if (breakable && (vel != 0))
+        w = 200
+
+        full_sprite = false
+        power_up = (!breakable) && (vel == 0) && (rand > 0.8)
+
+        if power_up
+          full_sprite = true
+          path = SPATHS.balloon.sample
+          w = 30
+        elsif breakable
+          if (vel == 0)
+            cloud = SPATHS.raincloud.sample
+            path = cloud.path
+            w = cloud.w
+          else
+            sprites = SPATHS.bird
+          end
+        else
+          cloud = SPATHS.cloud.sample
+          path = cloud.path
+          w = cloud.w
+        end
+        
         {
           x: (rand grid.w),
           y: 1000 + (i * 100) + rand(50),
-          w: 200,
+          w: w,
           h: 20,
           anchor_x: 0.5,
           anchor_y: 0.5,
           path: path,
+          sprites: sprites,
           flip_horizontally: vel > 0,
           breakable: breakable,
           vel: { x: vel },
+          full_sprite: full_sprite,
+          power_up: power_up,
         }
       end,
     ].flatten
   end
 
   def generate_power_ups platforms
-    platforms.filter do |p|
+    selected = platforms.filter do |p|
       (!p.breakable) && (p.vel&.x == 0) && (rand > 0.8)
-    end.map do |p|
+    end
+
+    selected.map do |p|
+      # naughty side effects!
+      platforms.delete p
+      
       {
         x: p.x,
         y: p.top,
@@ -202,6 +257,7 @@ class Game
         h: 10,
         anchor_x: 0.5,
         anchor_y: 0,
+        path: SPATHS.balloon.sample,
       }
     end
   end
@@ -273,7 +329,7 @@ class Game
       player.bottom = plat.top
       player.vel.y = controls_settings.bounce_up_speed
 
-      if geometry.find_intersect_rect player, state.power_ups
+      if plat.power_up
         player.vel.y += controls_settings.bounce_up_speed
         audio[:powerup] ||= {
           input: "sound/powerup.wav"
@@ -332,7 +388,13 @@ class Game
     p.y -= state.camera
     
     if p.path
+      p.w = p.full_sprite ? 512 : p.w
       p.h = p.w
+      p.sprite
+    elsif p.sprites
+      p.h = p.w
+      s = p.sprites
+      p.path = s[(0.frame_index s.length, 30, true)]
       p.sprite
     elsif p.breakable
       p.border
@@ -342,19 +404,44 @@ class Game
   end
   
   def render
-    # tree-trunk
-    outputs.primitives << {
-      x: grid.center.x,
-      y: -state.camera,
-      w: 50,
-      h: 1200,
-      anchor_x: 0.5,
-      anchor_y: 0,
-    }.solid
+    
+    outputs.primitives << [
+      #sky
+      {
+        x: 0,
+        y: 0,
+        w: 1280,
+        h: 720,
+        path: SPATHS.sky,
+      }.sprite,
+      # tree-trunk
+      {
+        x: grid.center.x,
+        y: -state.camera,
+        w: 794 * 2,
+        h: 894 * 2,
+        anchor_x: 0.5,
+        anchor_y: 0,
+        path: SPATHS.tree,
+      }.sprite,
+      # grass
+      {
+        x: 0,
+        y: -state.camera,
+        w: 1280,
+        h: 165,
+        path: SPATHS.grass,
+      }.sprite,
+    ]
     
     # platforms
     outputs.primitives << state.platforms.map do |p|
       sprite_for_platform p
+    end
+    outputs.primitives << state.platforms.map do |p|
+      p = p.dup
+      p.y -= state.camera
+      p.border
     end
     outputs.primitives << state.broken_platforms.map do |p|
       p = sprite_for_platform p

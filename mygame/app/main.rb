@@ -9,8 +9,10 @@ SPATHS = {
   sky: "sprites/sky.png",
   tree: "sprites/tree.png",
   grass: "sprites/grass.png",
-  branch1: "sprites/branch1.png",
-  branch2: "sprites/branch2.png",
+  branch1: {path: "sprites/branch1.png",
+            w: 400,},
+  branch2: {path: "sprites/branch2.png",
+            w: 270,},
   bird: ["sprites/bird.png",
          "sprites/bird2.png"],
   cloud: [{path: "sprites/cloud1.png",
@@ -183,17 +185,17 @@ class Game
       },
       # starting tree branches
       (2...10).map do |i|
-        v = true        
+        branch = [SPATHS.branch1, SPATHS.branch2].sample
         {
           x: grid.center.x,
           y: (i * 100) + rand(30),
-          w: v ? 370 : 220,
+          w: branch.w,
           h: 20,
           anchor_x: i % 2,
           anchor_y: 0.5,
-          path: v ? SPATHS.branch1 : SPATHS.branch2,
+          path: branch.path,
           flip_horizontally: i % 2 != 0,
-          full_sprite: false,
+          sprite_scale: 512 / branch.w,
         }
       end,
       # rest of level

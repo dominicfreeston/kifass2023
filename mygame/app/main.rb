@@ -157,13 +157,29 @@ class Game
     }
 
     state.platforms = generate_platforms
+
+    # clean up level, stopping power_ups from intersecting
+    
+    power_ups = state.platforms.filter do |p|
+      p.power_up
+    end.map do |p|
+      p = p.dup
+      p.h = 100
+      p.anchor_y = 0
+      p
+    end
+
+    state.platforms.filter! do |p|
+      p.power_up || (not geometry.find_intersect_rect p, power_ups)
+    end
+    
     state.broken_platforms = []
     
     state.goal = {
       x: grid.center.x,
-      y: state.platforms.last.y + 100,
-      w: 80,
-      h: 80,
+      y: state.platforms.last.y + 300,
+      w: 128,
+      h: 128,
       path: SPATHS.goal
     }
 

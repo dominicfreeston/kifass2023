@@ -4,6 +4,8 @@ SPATHS = {
     up: "sprites/cat-up.png",
     down: "sprites/cat-down.png",
   },
+  space: "sprites/space.png",
+  transition: "sprites/skytransition.png",
   sky: "sprites/sky.png",
   tree: "sprites/tree.png",
   grass: "sprites/grass.png",
@@ -150,7 +152,7 @@ class Game
       anchor_y: 0,
       vel: {x: 0, y: 0,},
     }
-    
+
     state.platforms = generate_platforms
     state.broken_platforms = []
     state.power_ups = []    # (generate_power_ups state.platforms)
@@ -200,33 +202,37 @@ class Game
         breakable = rand > 0.7
         vel = [0, 0, 0, 0, -1, 1].sample * (rand 4).to_i
         w = 200
+        h = 20
 
         full_sprite = false
         power_up = (!breakable) && (vel == 0) && (rand > 0.8)
 
+        sprite_scale = 1
         if power_up
           full_sprite = true
           path = SPATHS.balloon.sample
-          w = 30
+          w = 100
+          h = 60
+          sprite_scale = 512 / 200
         elsif breakable
           if (vel == 0)
             cloud = SPATHS.raincloud.sample
             path = cloud.path
-            w = cloud.w
+            sprite_scale = 512 / cloud.w
           else
             sprites = SPATHS.bird
           end
         else
           cloud = SPATHS.cloud.sample
           path = cloud.path
-          w = cloud.w
+          sprite_scale = 512 / cloud.w
         end
         
         {
           x: (rand grid.w),
           y: 1000 + (i * 100) + rand(50),
           w: w,
-          h: 20,
+          h: h,
           anchor_x: 0.5,
           anchor_y: 0.5,
           path: path,
@@ -236,6 +242,7 @@ class Game
           vel: { x: vel },
           full_sprite: full_sprite,
           power_up: power_up,
+          sprite_scale: sprite_scale,
         }
       end,
     ].flatten
@@ -388,7 +395,7 @@ class Game
     p.y -= state.camera
     
     if p.path
-      p.w = p.full_sprite ? 512 : p.w
+      p.w = p.w * (p.sprite_scale || 1)
       p.h = p.w
       p.sprite
     elsif p.sprites
@@ -404,6 +411,7 @@ class Game
   end
   
   def render
+    sky_start = state.goal.y - 2000
     
     outputs.primitives << [
       #sky
@@ -413,6 +421,22 @@ class Game
         w: 1280,
         h: 720,
         path: SPATHS.sky,
+      }.sprite,
+      # transition
+      {
+        x: 0,
+        y: [sky_start - 720 - state.camera, - 720].max,
+        w: 1280,
+        h: 720,
+        path: SPATHS.transition,
+      }.sprite,
+      # space
+      {
+        x: 0,
+        y: [sky_start - state.camera, 0].max,
+        w: 1280,
+        h: 720,
+        path: SPATHS.space
       }.sprite,
       # tree-trunk
       {
@@ -438,11 +462,15 @@ class Game
     outputs.primitives << state.platforms.map do |p|
       sprite_for_platform p
     end
-    outputs.primitives << state.platforms.map do |p|
-      p = p.dup
-      p.y -= state.camera
-      p.border
+    
+    if state.debug_on
+      outputs.primitives << state.platforms.map do |p|
+        p = p.dup
+        p.y -= state.camera
+        p.border
+      end
     end
+    
     outputs.primitives << state.broken_platforms.map do |p|
       p = sprite_for_platform p
       p.angle = 45 * (p.flip_horizontally ? -1 : 1)

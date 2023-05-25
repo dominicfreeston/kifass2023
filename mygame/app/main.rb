@@ -144,15 +144,16 @@ class Game
     state.selected_controls ||= state.controls.next
     
     state.camera = 0
+    state.camera_goal = 0
     
     state.player = {
       x: 100,
-      y: 100  ,
+      y: 0,
       w: 64,
       h: 64,
       anchor_x: 0.5,
       anchor_y: 0,
-      vel: {x: 0, y: 0,},
+      vel: {x: 0, y: CONTROL_SETTINGS.heavy.bounce_up_speed,},
     }
 
     state.platforms = generate_platforms
@@ -268,10 +269,16 @@ class Game
     end
 
     controls_settings = CONTROL_SETTINGS[state.selected_controls]
+
+    camera_delta = (state.camera_goal - state.camera)
+    camera_vel = camera_delta.positive? ? 20 : 30
+    state.camera += camera_delta.sign * [camera_delta.abs, camera_vel].min
+    if state.player.vel.y > 0
+      state.camera_goal = [player.y - 500, state.camera_goal].max
+    end
     
-    state.camera = [player.y - 500, state.camera].max
     state.platforms.filter! do |p|
-      p.top > state.camera
+      p.top > state.camera - 1000
     end
     visible_platforms = state.platforms.filter do |p|
       p.bottom < state.camera + grid.h
@@ -285,7 +292,6 @@ class Game
       player.x += lr * 10
     end
 
-    # Find platforms that are below player before movement is applied
     visible_platforms.each do |p|
       if dx = p.vel&.x
         p.x += dx
@@ -345,10 +351,14 @@ class Game
 
     # lose
     if player.top < state.camera
-      audio[:lose] = {
-        input: "sound/lose.wav"
-      }
-      reset_level
+      if player.bottom > 700 && player.top < state.goal.bottom
+        audio[:lose] = {
+          input: "sound/lose.wav"
+        }
+        reset_level
+      else
+        state.camera_goal = [player.y - 1000, 0].max
+      end
     end
 
     # win

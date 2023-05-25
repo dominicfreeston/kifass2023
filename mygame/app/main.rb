@@ -147,9 +147,9 @@ class Game
     
     state.player = {
       x: 100,
-      y: 20 ,
-      w: 128,
-      h: 128,
+      y: 100  ,
+      w: 64,
+      h: 64,
       anchor_x: 0.5,
       anchor_y: 0,
       vel: {x: 0, y: 0,},
@@ -443,14 +443,6 @@ class Game
       sprite_for_platform p
     end
     
-    if state.debug_on
-      outputs.primitives << state.platforms.map do |p|
-        p = p.dup
-        p.y -= state.camera
-        p.border
-      end
-    end
-    
     outputs.primitives << state.broken_platforms.map do |p|
       p = sprite_for_platform p
       p.angle = 45 * (p.flip_horizontally ? -1 : 1)
@@ -466,6 +458,8 @@ class Game
 
     outputs.primitives << [player].map do |p|
       p = p.dup
+      p.w = 128
+      p.h = 128
       p.y -= state.camera
       delta = 2
       if p.vel.y > delta
@@ -477,6 +471,22 @@ class Game
       end
       p.flip_horizontally = p.vel.x < 0
       p.sprite
+    end
+
+    if state.debug_on
+      outputs.primitives << state.platforms.map do |p|
+        p = p.dup
+        p.y -= state.camera
+        p.border
+      end
+
+      outputs.primitives << state.pla
+
+      outputs.primitives << [player].map do |p|
+        p = p.dup
+        p.y -= state.camera
+        p.border
+      end
     end
     
     outputs.labels << {

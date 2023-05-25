@@ -155,8 +155,7 @@ class Game
 
     state.platforms = generate_platforms
     state.broken_platforms = []
-    state.power_ups = []    # (generate_power_ups state.platforms)
-
+    
     state.goal = {
       x: grid.center.x,
       y: state.platforms.last.y + 100,
@@ -246,27 +245,6 @@ class Game
         }
       end,
     ].flatten
-  end
-
-  def generate_power_ups platforms
-    selected = platforms.filter do |p|
-      (!p.breakable) && (p.vel&.x == 0) && (rand > 0.8)
-    end
-
-    selected.map do |p|
-      # naughty side effects!
-      platforms.delete p
-      
-      {
-        x: p.x,
-        y: p.top,
-        w: 30,
-        h: 10,
-        anchor_x: 0.5,
-        anchor_y: 0,
-        path: SPATHS.balloon.sample,
-      }
-    end
   end
 
   def wraparound! entity
@@ -477,12 +455,6 @@ class Game
       p
     end
 
-    outputs.primitives << state.power_ups.map do |p|
-      p = p.dup
-      p.y -= state.camera
-      p.solid
-    end
-    
     outputs.primitives << [state.goal].map do |p|
       p = p.dup
       p.h -= p.h.half * (p.squish || 0)

@@ -349,7 +349,7 @@ class Game
         
         {
           x: (rand grid.w),
-          y: 1000 + (i * 100) + rand(50),
+          y: 950 + (i * 100) + rand(50),
           w: w,
           h: h,
           anchor_x: 0.5,
@@ -376,6 +376,13 @@ class Game
   end
 
   def update_drop
+
+    if inputs.keyboard.key_down.space
+      state.intro_drop = false
+      state.camera = 0 
+      return
+    end
+    
     wait_time = 1.seconds
     wait_progress = state.drop_start.ease wait_time
 

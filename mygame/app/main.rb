@@ -31,6 +31,10 @@ SPATHS = {
             "sprites/balloon2.png",
             "sprites/balloon3.png",],
   goal: "sprites/yarn_ball.png",
+  cutscene: ["sprites/cutscene1.png",
+             "sprites/cutscene2.png",
+             "sprites/cutscene3.png",
+             "sprites/cutscene4.png",],
 }
 
 CONTROL_SETTINGS = {
@@ -60,6 +64,99 @@ WIN_TEXTS = {
 
 ACCELERATION = 0.2
 MAX_MOVE_SPEED = 12
+
+class CutScene
+  attr_gtk
+
+  def initialize
+    @screens = SPATHS.cutscene
+    @current = 0
+    @next = 1
+  end
+  
+  def tick
+    @current_started_at ||= state.tick_count
+
+    progress = (@current_started_at + 2.seconds).ease 1.seconds, :cube
+    
+    wipe progress
+
+    if progress >= 1 || inputs.keyboard.key_down.space
+      if @next >= @screens.length
+        return IntroScene.new INTRO_TEXTS
+      end  
+
+      @current = @next
+      @next += 1
+      @current_started_at = state.tick_count
+    end
+
+    self
+  end
+
+  def wipe progress
+    outputs.sprites << {
+      x: 0,
+      y: 0,
+      w: grid.w,
+      h: grid.h,
+      path: @screens[@next]
+    }
+
+    path = @screens[@current]
+
+    w = 10
+    move = ((grid.w + w) * progress).to_i
+    outputs.sprites << {
+      x: 0,
+      y: 0,
+      w: grid.w - move,
+      h: grid.h,
+      path: path,
+      source_x: 0,
+      source_w: grid.w - move,
+    }
+
+    outputs.primitives << {
+      x: grid.w - move,
+      y: 0,
+      w: w,
+      h: grid.h,
+    }.solid
+  end
+  
+  def split progress
+    outputs.sprites << {
+      x: 0,
+      y: 0,
+      w: grid.w,
+      h: grid.h,
+      path: @screens[@next]
+    }
+
+    path = @screens[@current]
+    left = {
+      x: 0 - (grid.w / 2) * progress,
+      y: 0,
+      w: grid.w / 2,
+      h: grid.h,
+      path: path,
+      source_x: 0,
+      source_w: grid.w / 2,
+    }
+    right = {
+      x: grid.center.x + (grid.w / 2) * progress,
+      y: 0,
+      w: grid.w / 2,
+      h: grid.h,
+      path: path,
+      source_x: grid.center.x,
+      source_w: grid.w / 2,
+    }
+
+    outputs.sprites << [left, right]
+  end
+end
 
 class IntroScene
   attr_gtk
@@ -562,11 +659,15 @@ def tick args
   args.outputs.solids << [0, 0, args.grid.w, args.grid.h, 255, 255, 255]
 
   $scene.args = args
+  # I have regrets about this whole
+  # always return the next tick scene thing.
+  # It keeps tripping me up!
   $scene = $scene.tick
 end
 
 
-$scene = IntroScene.new INTRO_TEXTS
+# $scene = IntroScene.new INTRO_TEXTS
+$scene = CutScene.new
 $gtk.reset
 
 ## This is probably a bad idea but let's try it for this game!

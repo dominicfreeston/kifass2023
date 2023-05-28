@@ -533,9 +533,11 @@ class Game
       p.h = p.w
       p.sprite
     elsif p.sprites
+      # this is just birds in the end
       p.h = p.w
       s = p.sprites
-      p.path = s[(0.frame_index s.length, 30, true)]
+      loc = (p.x.idiv 50) % 2
+      p.path = s[loc]
       p.sprite
     elsif p.breakable
       p.border

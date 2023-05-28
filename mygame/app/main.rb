@@ -239,8 +239,10 @@ class Game
     state.game_paused ||= false
     state.controls ||= [:heavy, :fast].cycle
     state.selected_controls ||= state.controls.next
-    
-    state.camera = 0
+
+    state.camera_drop_vel = 0
+    state.drop_start = state.tick_count
+    state.intro_drop = true
     state.camera_goal = 0
     
     state.player = {
@@ -279,6 +281,8 @@ class Game
       h: 128,
       path: SPATHS.goal
     }
+
+    state.camera = state.goal.y - 360
 
     audio[:theme] ||= {
       input: "sound/tumbleweed.ogg",
@@ -371,10 +375,28 @@ class Game
     end
   end
 
+  def update_drop
+    wait_time = 1.seconds
+    wait_progress = state.drop_start.ease wait_time
+
+    return if wait_progress < 1
+    
+    accelerate_ramp = (state.drop_start + wait_time).ease 2.seconds
+    camera_delta = (state.camera_goal - state.camera)
+    state.camera_drop_vel = (state.camera_drop_vel + accelerate_ramp).clamp(0, 30)
+    
+    state.camera += camera_delta.sign * [camera_delta.abs, state.camera_drop_vel].min
+    state.camera = state.camera.floor
+
+    state.intro_drop = false if state.camera < 720
+  end
+  
   def update
     state.game_paused = !state.game_paused if inputs.keyboard.key_down.escape
+    state.game_paused = false if inputs.keyboard.key_down.space
     state.game_paused = true if !inputs.keyboard.has_focus
     audio[:theme].paused = state.game_paused
+
     return if state.game_paused
 
     if inputs.keyboard.key_down.c
@@ -386,13 +408,15 @@ class Game
     camera_delta = (state.camera_goal - state.camera)
     camera_vel = camera_delta.positive? ? 20 : 30
     state.camera += camera_delta.sign * [camera_delta.abs, camera_vel].min
+
     if state.player.vel.y > 0
       state.camera_goal = [player.y - 500, state.camera_goal].max
     end
     
-    state.platforms.filter! do |p|
-      p.top > state.camera - 1000
-    end
+    # state.platforms.filter! do |p|
+    #  p.top > state.camera - 1000
+    # end
+    
     visible_platforms = state.platforms.filter do |p|
       p.bottom < state.camera + grid.h
     end
@@ -509,7 +533,7 @@ class Game
     elsif p.breakable
       p.border
     else
-      p.solid
+      nil
     end
   end
   
@@ -636,7 +660,13 @@ class Game
   
   def tick
     reset_level if !@setup
-    update
+
+    if state.intro_drop
+      update_drop
+    else
+      update
+    end
+    
     render
 
     # debug overlay
@@ -667,7 +697,8 @@ end
 
 
 # $scene = IntroScene.new INTRO_TEXTS
-$scene = CutScene.new
+# $scene = CutScene.new
+$scene = Game.new
 $gtk.reset
 
 ## This is probably a bad idea but let's try it for this game!

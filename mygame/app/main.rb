@@ -51,15 +51,24 @@ CONTROL_SETTINGS = {
 }
 
 INTRO_TEXTS = {
-  title: "Tumbleweed goes to space",
-  subtitle: "things could get hairy",
+  title: "Hey, that's my yarn!",
+  subtitle: "a game made with DragonRuby for the KIFASS game jam",
+  credits: [
+    ["programming and design", "Dominic Freeston"],
+    ["concept and art", " Ellis"],
+    ["with music by", "Ryan Edgewurst"],
+  ],
   instruction: "press SPACE to begin",
+  background: SPATHS.sky,
+  text_color: {r: 0, g: 0, b: 64},
 }
 
 WIN_TEXTS = {
   title: "YOU MADE IT!",
-  subtitle: "Tumbleweed went to space and got the thing",
+  subtitle: "You went all the way to space and got the yarn.",
   instruction: "press SPACE to start again",
+  background: SPATHS.space,
+  text_color: {r: 255, g: 255, b: 255},
 }
 
 ACCELERATION = 0.2
@@ -167,6 +176,7 @@ class IntroScene
   end
 
   def setup
+    @offset = @texts.credits ? -20 : -100
     t = @texts.instruction
     
     state.instruction_letters =
@@ -174,7 +184,7 @@ class IntroScene
       {
         text: l,
         x: grid.center.x + i * 16,
-        y: grid.center.y - 120 + i,
+        y: grid.center.y + @offset + t.length.half + i,
         size_px: 32,
         alignment_enum: 0,
         vertical_alignment_enum: 1,
@@ -187,17 +197,26 @@ class IntroScene
   
   def tick
     setup if not @setup
-    state.instruction_letters.each do |l| 
+
+    text_color = @texts.text_color
+    
+    state.instruction_letters.each do |l|
+      l.merge! text_color
       l.vel.y = (l.vel.y - 0.25)
                   .clamp(-12, 12)
       l.y += l.vel.y
 
-      platform = grid.center.y - 130
+      platform = grid.center.y + @offset
       if l.y < platform
         l.y = platform
         l.vel.y = 4
       end
     end
+
+    outputs.sprites << {
+      x: 0, y: 0, w: 1280, h: 720,
+      path: @texts.background
+    }
     
     outputs.labels << [
       {
@@ -207,7 +226,7 @@ class IntroScene
         size_px: 64,
         alignment_enum: 1,
         vertical_alignment_enum: 1,
-      },
+      }.merge(text_color),
       {
         text: @texts.subtitle,
         x: grid.center.x,
@@ -215,7 +234,25 @@ class IntroScene
         size_px: 32,
         alignment_enum: 1,
         vertical_alignment_enum: 1,
-      }]
+      }.merge(text_color)]
+
+    outputs.labels << @texts.credits.map.with_index(- @texts.credits.length.idiv(2)) do |text, i|
+      r1 = layout.rect row: 10, col: 12 + i * 8, w: 0, h: 0
+      r2 = layout.rect row: 11, col: 12 + i * 8, w: 0, h: 0
+
+      [{
+         **r1,
+         text: text[0],
+         alignment_enum: 1
+       }.merge(text_color),
+       {
+         **r2,
+         size_px: 32,
+         text: text[1],
+         alignment_enum: 1
+       }.merge(text_color)
+      ]
+    end if @texts.credits
 
     outputs.labels << state.instruction_letters
 
@@ -277,8 +314,9 @@ class Game
     state.goal = {
       x: grid.center.x,
       y: state.platforms.last.y + 300,
-      w: 128,
-      h: 128,
+      w: 256,
+      h: 256,
+      anchor_x: 0.5,
       path: SPATHS.goal
     }
 
@@ -546,7 +584,7 @@ class Game
     end
   end
   
-  def render
+  def render target = outputs
     sky_start = state.goal.y - 2000
     
     outputs.primitives << [
@@ -705,9 +743,9 @@ def tick args
 end
 
 
-# $scene = IntroScene.new INTRO_TEXTS
+$scene = IntroScene.new INTRO_TEXTS
 # $scene = CutScene.new
-$scene = Game.new
+# $scene = Game.new
 $gtk.reset
 
 ## This is probably a bad idea but let's try it for this game!

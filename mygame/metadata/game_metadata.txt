@@ -1,6 +1,6 @@
 devid=dominicfreeston
-devtitle=Dominic Freeston
+devtitle=Team Tumbleweed
 gameid=hey-thats-my-yarn
-gametitle=Hey, that's my yarn!
+gametitle=Hey, thats my yarn!
 version=0.10
 icon=sprites/cat.png

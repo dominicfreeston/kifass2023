@@ -176,7 +176,7 @@ class IntroScene
   end
 
   def setup
-    @offset = @texts.credits ? -20 : -100
+    @offset = -100
     t = @texts.instruction
     
     state.instruction_letters =
@@ -234,8 +234,30 @@ class IntroScene
         size_px: 32,
         alignment_enum: 1,
         vertical_alignment_enum: 1,
-      }.merge(text_color)]
-
+      }.merge(text_color),
+    ]
+    
+    outputs.sprites << [
+      {
+        x: grid.center.x,
+        y: grid.center.y + 80,
+        w: 128,
+        h: 128,
+        path: SPATHS.player.flat,
+        anchor_x: 1,
+        anchor_y: 1,
+      },
+      {
+        x: grid.center.x,
+        y: grid.center.y + 80,
+        w: 128,
+        h: 128,
+        path: SPATHS.goal,
+        anchor_x: 0,
+        anchor_y: 1,
+      },
+    ] if @texts.credits
+    
     outputs.labels << @texts.credits.map.with_index(- @texts.credits.length.idiv(2)) do |text, i|
       r1 = layout.rect row: 10, col: 12 + i * 8, w: 0, h: 0
       r2 = layout.rect row: 11, col: 12 + i * 8, w: 0, h: 0
@@ -584,7 +606,7 @@ class Game
     end
   end
   
-  def render target = outputs
+  def render
     sky_start = state.goal.y - 2000
     
     outputs.primitives << [

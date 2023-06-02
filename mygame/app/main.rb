@@ -444,9 +444,9 @@ class Game
 
     return if state.game_paused
 
-    if inputs.keyboard.key_down.c
-      state.selected_controls = state.controls.next
-    end
+    # if inputs.keyboard.key_down.c
+    #   state.selected_controls = state.controls.next
+    # end
 
     controls_settings = CONTROL_SETTINGS[state.selected_controls]
 
@@ -683,14 +683,6 @@ class Game
       end
     end
     
-    outputs.labels << {
-      x: grid.w - 5,
-      y: grid.h - 5,
-      text: state.selected_controls,
-      alignment_enum: 2,
-      vertical_alignment_enum: 2,
-    }
-
     if state.game_paused
       outputs.primitives << [1, 2].map do |n|
         {

@@ -1,6 +1,6 @@
-devid=dominic-and-ellis
-devtitle=Dominic and Ellis
-gameid=kifass-2023
-gametitle=KIFASS 2023
-version=0.9
+devid=dominicfreeston
+devtitle=Dominic Freeston
+gameid=hey-thats-my-yarn
+gametitle=Hey, that's my yarn!
+version=0.10
 icon=sprites/cat.png

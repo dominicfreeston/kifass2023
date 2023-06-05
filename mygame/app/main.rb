@@ -55,7 +55,7 @@ INTRO_TEXTS = {
   subtitle: "a game made with DragonRuby for the KIFASS game jam",
   credits: [
     ["programming and design", "Dominic Freeston"],
-    ["concept and art", " Ellis"],
+    ["concept and art", " Ellis D"],
     ["with music by", "Ryan Edgewurth"],
   ],
   instruction: "press SPACE to begin",

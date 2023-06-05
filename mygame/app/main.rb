@@ -339,6 +339,7 @@ class Game
       w: 256,
       h: 256,
       anchor_x: 0.5,
+      anchor_y: 0.5,
       path: SPATHS.goal
     }
 
@@ -470,10 +471,14 @@ class Game
     #   state.selected_controls = state.controls.next
     # end
 
+    
+    gtk.slowmo! 4 if (geometry.distance player, state.goal) < 300
+    
     controls_settings = CONTROL_SETTINGS[state.selected_controls]
 
     camera_delta = (state.camera_goal - state.camera)
     camera_vel = camera_delta.positive? ? 20 : 30
+    camera_vel = 80 if (state.goal.y - player.y).abs < 300
     state.camera += camera_delta.sign * [camera_delta.abs, camera_vel].min
 
     if state.player.vel.y > 0

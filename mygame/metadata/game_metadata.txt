@@ -2,5 +2,5 @@ devid=dominicfreeston
 devtitle=Team Tumbleweed
 gameid=hey-thats-my-yarn
 gametitle=Hey, thats my yarn!
-version=0.10
+version=1.0
 icon=sprites/cat.png

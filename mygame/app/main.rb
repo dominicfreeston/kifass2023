@@ -56,7 +56,7 @@ INTRO_TEXTS = {
   credits: [
     ["programming and design", "Dominic Freeston"],
     ["concept and art", " Ellis"],
-    ["with music by", "Ryan Edgewurst"],
+    ["with music by", "Ryan Edgewurth"],
   ],
   instruction: "press SPACE to begin",
   background: SPATHS.sky,

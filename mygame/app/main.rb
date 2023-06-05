@@ -577,7 +577,7 @@ class Game
 
     state.broken_platforms.each do |p|
       p.x += p.vel.x
-      p.y -= 8
+      p.y -= p.vel.x == 0 ? 4 : 8
       if p.top < state.camera - 100 
         state.broken_platforms.delete p
       end
@@ -660,9 +660,26 @@ class Game
     end
     
     outputs.primitives << state.broken_platforms.map do |p|
-      p = sprite_for_platform p
-      p.angle = 45 * (p.flip_horizontally ? -1 : 1)
-      p
+      if p.vel.x == 0
+        x = rand
+        (-32...32).map do |i|   
+          {
+            x: p.x + i * 2 + x * x * 30,
+            y: p.y - state.camera - 200 * rand,
+            w: 3,
+            h: 3,
+            anchor_x: 0.5,
+            anchor_y: 1.0,
+            r: 0,
+            g: 0,
+            b: 55,
+          }.solid
+        end
+      else
+        p = sprite_for_platform p
+        p.angle = 45 * (p.flip_horizontally ? -1 : 1)
+        p
+      end
     end
 
     outputs.primitives << [state.goal].map do |p|

@@ -506,10 +506,11 @@ class Game
     below_platforms = visible_platforms.select { |c| player.bottom >= c.top}
     player.y += player.vel.y
 
+    # player.vel.x = 0 if lr != 0 && lr != player.vel.x.sign
     acc = ACCELERATION * lr
     # slow down faster than you speed up
-    acc += ACCELERATION * lr if lr != player.vel.x.sign
-    
+    acc += ACCELERATION * lr * 2 if lr != player.vel.x.sign
+
     player.vel.x = (player.vel.x + acc)
                      .clamp(-MAX_MOVE_SPEED, MAX_MOVE_SPEED)
     player.vel.y = (player.vel.y - controls_settings.gravity)

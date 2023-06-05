@@ -541,7 +541,28 @@ class Game
 
       if plat.breakable
         state.platforms.delete plat
-        state.broken_platforms << plat
+        if plat.vel.x != 0
+          plat.vel.y = -8
+          state.broken_platforms << plat
+        else
+          ## Rain
+          p = plat
+          state.broken_platforms += (-32...32).map do |i|
+            {
+              x: p.x,
+              y: p.y - 20 * rand,
+              w: 2,
+              h: 3,
+              anchor_x: 0.5,
+              anchor_y: 0.5,
+              r: 0,
+              g: 0,
+              b: 55,
+              vel: {x: -2 + rand * 4, y: -4 - rand * 4},
+              rain: true,
+            }
+          end
+        end
         audio[:break] ||= {
           input: "sound/break.wav",
           gain: 0.5,
@@ -578,7 +599,7 @@ class Game
 
     state.broken_platforms.each do |p|
       p.x += p.vel.x
-      p.y -= p.vel.x == 0 ? 4 : 8
+      p.y += p.vel.y
       if p.top < state.camera - 100 
         state.broken_platforms.delete p
       end
@@ -661,22 +682,13 @@ class Game
     end
     
     outputs.primitives << state.broken_platforms.map do |p|
-      if p.vel.x == 0
-        x = rand
-        (-32...32).map do |i|   
-          {
-            x: p.x + i * 2 + x * x * 30,
-            y: p.y - state.camera - 200 * rand,
-            w: 3,
-            h: 3,
-            anchor_x: 0.5,
-            anchor_y: 1.0,
-            r: 0,
-            g: 0,
-            b: 55,
-          }.solid
-        end
+      if p.rain
+        ## Rain
+        p = p.dup
+        p.y -= state.camera
+        p.solid
       else
+        ## Bird
         p = sprite_for_platform p
         p.angle = 45 * (p.flip_horizontally ? -1 : 1)
         p
